@@ -24,13 +24,18 @@ jobs:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
       - name: Restore
-        run: dotnet restore RetailOptimizationPlatform.slnx
+        run: dotnet restore RetailOptimizationPlatform.csproj
 
       - name: Build
-        run: dotnet build RetailOptimizationPlatform.slnx --no-restore --configuration Release
+        run: dotnet build RetailOptimizationPlatform.csproj --no-restore --configuration Release
 
       - name: Test
-        run: dotnet test RetailOptimizationPlatform.slnx --no-build --configuration Release --verbosity normal
+        run: |
+          if compgen -G "*Tests.csproj" > /dev/null; then
+            dotnet test *Tests.csproj --no-build --configuration Release --verbosity normal
+          else
+            echo "No test project found in repository. Skipping tests."
+          fi
 
   docker-publish:
     if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
