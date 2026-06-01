@@ -38,7 +38,21 @@ jobs:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
       - name: Install EF Core CLI
-        run: dotnet tool install --global dotnet-ef
+        run: |
+          dotnet tool update --global dotnet-ef
+          echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
+
+      - name: Restore project for EF
+        run: dotnet restore RetailOptimizationPlatform.csproj
+
+      - name: List pending EF migrations
+        env:
+          AZURE_SQL_CONNECTION_STRING: ${{ secrets.AZURE_SQL_CONNECTION_STRING }}
+        run: |
+          dotnet ef migrations list \
+            --project RetailOptimizationPlatform.csproj \
+            --startup-project RetailOptimizationPlatform.csproj \
+            --connection "$AZURE_SQL_CONNECTION_STRING"
 
       - name: Apply EF Core migrations to Azure SQL
         env:
@@ -46,7 +60,9 @@ jobs:
         run: |
           dotnet ef database update \
             --project RetailOptimizationPlatform.csproj \
-            --connection "$AZURE_SQL_CONNECTION_STRING"
+            --startup-project RetailOptimizationPlatform.csproj \
+            --connection "$AZURE_SQL_CONNECTION_STRING" \
+            --verbose
 
       - name: Build and Push Docker image
         run: |
