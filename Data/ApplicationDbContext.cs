@@ -51,6 +51,15 @@ namespace RetailOptimizationPlatform.Data
                     Price = 799,
                     StockQuantity = 50,
                     ReorderLevel = 10
+                },
+                new Product
+                {
+                    ProductId = 3,
+                    ProductName = "Smart TV",
+                    Category = "TV",
+                    Price = 10000,
+                    StockQuantity = 19,
+                    ReorderLevel = 5
                 }
             );
         }
