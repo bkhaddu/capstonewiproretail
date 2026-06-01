@@ -1,0 +1,74 @@
+@model IEnumerable<RetailOptimizationPlatform.Models.Product>
+@{
+    ViewData["Title"] = "Critical Low Stock Alerts";
+}
+
+<div class="premium-table-card reveal">
+    <div class="table-title-row">
+        <div>
+            <h3 class="chart-title" style="font-size: 1.25rem;">Critical Reorder Threshold Alerts</h3>
+            <p class="text-muted m-0" style="font-size: 0.82rem;">The following products have dropped below their minimum safety reorder thresholds.</p>
+        </div>
+        <div>
+            <a asp-controller="Orders" asp-action="Create" class="btn-premium btn-premium-primary btn-premium-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+                Restock Now
+            </a>
+        </div>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="text-center py-5">
+            <div class="d-inline-flex align-items-center justify-content-center icon-emerald mb-3" style="width: 60px; height: 60px; border-radius: 50%; font-size: 1.8rem;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            </div>
+            <h4 class="fw-bold text-dark mb-1" style="font-family: 'Space Grotesk', sans-serif;">All Stock Levels Optimal</h4>
+            <p class="text-muted m-0" style="font-size: 0.88rem;">No products are currently under critical reorder levels.</p>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="premium-table">
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Category</th>
+                        <th>Current Stock</th>
+                        <th>Reorder Level</th>
+                        <th>Deficit Status</th>
+                        <th class="text-end">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var product in Model)
+                    {
+                        var deficit = product.ReorderLevel - product.StockQuantity;
+                        
+                        <tr class="table-warning-row" style="background-color: rgba(245, 158, 11, 0.03);">
+                            <td class="fw-semibold text-dark">@product.ProductName</td>
+                            <td>
+                                <span class="badge-custom badge-custom-info">@product.Category</span>
+                            </td>
+                            <td>
+                                <span class="badge-custom badge-custom-danger">@product.StockQuantity units left</span>
+                            </td>
+                            <td>@product.ReorderLevel units</td>
+                            <td>
+                                <span class="text-danger fw-semibold" style="font-size: 0.85rem;">
+                                    Deficit: @(deficit <= 0 ? "Critical Out" : $"+{deficit} units required")
+                                </span>
+                            </td>
+                            <td class="text-end">
+                                <a asp-action="Edit" asp-route-id="@product.ProductId" class="btn-premium btn-premium-secondary btn-premium-sm" style="padding: 0.25rem 0.6rem;">
+                                    Quick Adjust
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

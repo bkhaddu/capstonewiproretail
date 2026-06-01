@@ -1,0 +1,72 @@
+@model IEnumerable<RetailOptimizationPlatform.Models.Order>
+@{
+    ViewData["Title"] = "Transaction Ledger";
+}
+
+<div class="premium-table-card reveal">
+    <div class="table-title-row">
+        <div>
+            <h3 class="chart-title" style="font-size: 1.25rem;">Transaction Ledger</h3>
+            <p class="text-muted m-0" style="font-size: 0.82rem;">Audit recent customer orders, invoices, and payment statuses.</p>
+        </div>
+        <div>
+            <a asp-action="Create" class="btn-premium btn-premium-primary btn-premium-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                New Order
+            </a>
+        </div>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="text-center py-5">
+            <div class="d-inline-flex align-items-center justify-content-center icon-blue mb-3" style="width: 60px; height: 60px; border-radius: 50%; font-size: 1.8rem;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+            </div>
+            <h4 class="fw-bold text-dark mb-1" style="font-family: 'Space Grotesk', sans-serif;">No Transactions Found</h4>
+            <p class="text-muted m-0" style="font-size: 0.88rem;">Once customer orders are placed, they will appear in this ledger.</p>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="premium-table">
+                <thead>
+                    <tr>
+                        <th>Order ID</th>
+                        <th>Customer</th>
+                        <th>Email address</th>
+                        <th>Order date</th>
+                        <th>Total Amount</th>
+                        <th>Operational status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var order in Model)
+                    {
+                        <tr>
+                            <td class="fw-bold text-dark">#TXN-@order.OrderId.ToString("D4")</td>
+                            <td class="fw-semibold">@order.CustomerName</td>
+                            <td>@order.CustomerEmail</td>
+                            <td class="text-muted">@order.OrderDate.ToString("MMM dd, yyyy - hh:mm tt")</td>
+                            <td class="fw-bold text-primary">₹@order.TotalAmount.ToString("N2")</td>
+                            <td>
+                                @if (order.Status == "Placed" || order.Status == "Success")
+                                {
+                                    <span class="badge-custom badge-custom-success">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                        Completed
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge-custom badge-custom-info">@order.Status</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

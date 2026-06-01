@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="../RetailOptimizationPlatform.Tests/RetailOptimizationPlatform.Tests.csproj" />
+  <Project Path="RetailOptimizationPlatform.csproj" />
+</Solution>
