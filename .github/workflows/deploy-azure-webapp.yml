@@ -1,4 +1,4 @@
-name: Deploy to Azure Web App (Container)
+name: Deploy to Azure Container App
 
 on:
   workflow_dispatch:
@@ -13,7 +13,7 @@ env:
   ACR_NAME: ${{ secrets.ACR_NAME }}
   IMAGE_NAME: retail-optimization-platform
   RESOURCE_GROUP: ${{ secrets.AZURE_RESOURCE_GROUP }}
-  WEBAPP_NAME: ${{ secrets.AZURE_WEBAPP_NAME }}
+  CONTAINER_APP_NAME: ${{ secrets.AZURE_CONTAINERAPP_NAME }}
 
 jobs:
   build-and-deploy:
@@ -35,23 +35,16 @@ jobs:
         run: |
           IMAGE_TAG=${{ github.sha }}
           IMAGE_URI=${ACR_NAME}.azurecr.io/${IMAGE_NAME}:${IMAGE_TAG}
+          IMAGE_LATEST=${ACR_NAME}.azurecr.io/${IMAGE_NAME}:latest
           docker build -t $IMAGE_URI .
+          docker tag $IMAGE_URI $IMAGE_LATEST
           docker push $IMAGE_URI
+          docker push $IMAGE_LATEST
           echo "IMAGE_URI=$IMAGE_URI" >> $GITHUB_ENV
 
-      - name: Configure Web App container
+      - name: Deploy image to Azure Container App
         run: |
-          az webapp config container set \
-            --name "$WEBAPP_NAME" \
+          az containerapp update \
+            --name "$CONTAINER_APP_NAME" \
             --resource-group "$RESOURCE_GROUP" \
-            --container-image-name "$IMAGE_URI"
-
-      - name: Set Web App port
-        run: |
-          az webapp config appsettings set \
-            --name "$WEBAPP_NAME" \
-            --resource-group "$RESOURCE_GROUP" \
-            --settings WEBSITES_PORT=8080
-
-      - name: Restart Web App
-        run: az webapp restart --name "$WEBAPP_NAME" --resource-group "$RESOURCE_GROUP"
+            --image "$IMAGE_URI"
