@@ -1,4 +1,5 @@
-﻿using RetailOptimizationPlatform.Models;
+using RetailOptimizationPlatform.DTOs;
+using RetailOptimizationPlatform.Models;
 
 namespace RetailOptimizationPlatform.Repositories
 {
@@ -10,5 +11,6 @@ namespace RetailOptimizationPlatform.Repositories
         Task UpdateAsync(Product product);
         Task DeleteAsync(int id);
         Task<List<Product>> GetLowStockProductsAsync();
+        Task<List<ProductSalesSummary>> GetProductSalesSummaryAsync();
     }
 }

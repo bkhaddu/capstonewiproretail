@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RetailOptimizationPlatform.Data;
+using RetailOptimizationPlatform.DTOs;
 using RetailOptimizationPlatform.Repositories;
 using System;
 using System.Linq;
@@ -136,6 +137,13 @@ namespace RetailOptimizationPlatform.Controllers
                 StockLevels = stockLevels,
                 OrderTrend = orderTrend
             });
+        }
+
+        [HttpGet("sales-summary")]
+        public async Task<IActionResult> GetSalesSummary()
+        {
+            var summary = await _productRepository.GetProductSalesSummaryAsync();
+            return Ok(summary);
         }
     }
 }

@@ -1,0 +1,52 @@
+========================================================================
+GITHUB COPILOT PROMPT LOG - RETAIL ORDER & INVENTORY ANALYTICS PLATFORM
+========================================================================
+
+Below is a curated log of target prompts utilized with GitHub Copilot and LLM assistance during the development and stabilization of the Retail Optimization Platform.
+
+------------------------------------------------------------------------
+Prompt 1: Domain Modeling & OOP Design (US1 - US2)
+------------------------------------------------------------------------
+"Create C# models for Product, Order, and OrderItem. Ensure they apply 
+clean C# 8.0/9.0 OOP design, data annotations for model validations 
+(Required, StringLength, Range), and represent a 1-to-many relationship 
+between Order and OrderItem, and Product and OrderItem."
+
+------------------------------------------------------------------------
+Prompt 2: EF Core Transactions & Stock Management (US3 - US4)
+------------------------------------------------------------------------
+"Write a C# service called OrderService implementing IOrderService. In 
+PlaceOrderAsync, use a transaction block. For each OrderItem, check if 
+the Product exists in the database. If it exists but has insufficient 
+stock, throw a descriptive custom exception. Otherwise, deduct the stock, 
+record the unit price from the product database, calculate the total order 
+amount, and save changes inside a single commit block."
+
+------------------------------------------------------------------------
+Prompt 3: ADO.NET SQL Joins Integration (US3 - US4)
+------------------------------------------------------------------------
+"Implement a repository method in ProductRepository using raw ADO.NET 
+via the EF Core database connection (_context.Database.GetDbConnection()). 
+Write a high-performance T-SQL query that performs a LEFT JOIN from 
+Products to OrderItems, groups by ProductId, and returns an analytical 
+summary containing ProductId, ProductName, TotalQuantitySold, and 
+TotalRevenue. Ensure SQL injection is avoided and database readers are 
+disposed properly."
+
+------------------------------------------------------------------------
+Prompt 4: JWT Authentication and Role-Based Authorization (US8 - US9)
+------------------------------------------------------------------------
+"Set up JWT Bearer authentication in Program.cs. Secure the RESTful Web 
+API controller endpoints by requiring authorization. Ensure that advanced 
+operations (like fetching the low-stock inventory catalog) are restricted 
+to users containing the 'Admin' role using role-based claims in the JWT token."
+
+------------------------------------------------------------------------
+Prompt 5: Cognitive AI Agent (MCP) Summarizer (US12)
+------------------------------------------------------------------------
+"Design a conceptual ASP.NET Core API controller called AiApiController. 
+Create an endpoint '/api/ai/summarize-reorder/{productId}' that simulates 
+a Model Context Protocol (MCP) AI Agent summarizing an inventory reorder 
+request. The agent should evaluate the current stock against the reorder 
+threshold, assign a risk level (Critical, Warning, Low), and output a 
+structured summary along with recommended supplier actions."
