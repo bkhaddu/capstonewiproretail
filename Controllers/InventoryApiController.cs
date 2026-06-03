@@ -1,17 +1,18 @@
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RetailOptimizationPlatform.Data;
-using RetailOptimizationPlatform.DTOs;
 using RetailOptimizationPlatform.Repositories;
-using System;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace RetailOptimizationPlatform.Controllers
 {
     [Route("api/inventory")]
     [ApiController]
+    [Authorize(
+        AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + "," + CookieAuthenticationDefaults.AuthenticationScheme,
+        Roles = "Admin")]
     public class InventoryApiController : ControllerBase
     {
         private readonly IProductRepository _productRepository;
@@ -23,7 +24,7 @@ namespace RetailOptimizationPlatform.Controllers
             _context = context;
         }
 
-        [HttpGet("check/{productId}")]
+        [HttpGet("check/{productId:int}")]
         public async Task<IActionResult> CheckStock(int productId)
         {
             var product = await _productRepository.GetByIdAsync(productId);
@@ -43,7 +44,6 @@ namespace RetailOptimizationPlatform.Controllers
             });
         }
 
-        [Authorize(Roles = "Admin")]
         [HttpGet("low-stock")]
         public async Task<IActionResult> LowStock()
         {
@@ -57,14 +57,12 @@ namespace RetailOptimizationPlatform.Controllers
             var products = await _context.Products.ToListAsync();
             var orders = await _context.Orders.Include(o => o.OrderItems).ToListAsync();
 
-            // 1. Calculate Metrics
             var totalProducts = products.Count;
             var lowStockProducts = products.Count(p => p.StockQuantity <= p.ReorderLevel);
             var outOfStockProducts = products.Count(p => p.StockQuantity == 0);
             var totalStockValue = products.Sum(p => p.Price * p.StockQuantity);
             var totalOrders = orders.Count;
 
-            // 2. Category Distribution
             var categories = products
                 .GroupBy(p => p.Category)
                 .Select(g => new
@@ -75,17 +73,15 @@ namespace RetailOptimizationPlatform.Controllers
                 })
                 .ToList();
 
-            // 3. Stock Levels
             var stockLevels = products
                 .Select(p => new
                 {
                     ProductName = p.ProductName,
-                    StockQuantity = p.StockQuantity,
-                    ReorderLevel = p.ReorderLevel
+                    p.StockQuantity,
+                    p.ReorderLevel
                 })
                 .ToList();
 
-            // 4. Order & Sales Trend (Last 7 Days)
             var today = DateTime.Today;
             var trendDays = Enumerable.Range(0, 7)
                 .Select(i => today.AddDays(-i))
@@ -103,21 +99,20 @@ namespace RetailOptimizationPlatform.Controllers
                 };
             }).ToList();
 
-            // Professional fallbacks: If the database is new or has very few orders, 
-            // inject realistic sample trend data to populate the area chart beautifully.
             if (orders.Count < 5)
             {
-                var random = new Random();
-                var mockBaseValues = new[] { 1200m, 1850m, 950m, 2200m, 3100m, 1600m, 2900m };
-                
+                var random = new Random(42);
+                var sampleValues = new[] { 1200m, 1850m, 950m, 2200m, 3100m, 1600m, 2900m };
+
                 orderTrend = trendDays.Select((date, index) =>
                 {
                     var dayOrders = orders.Where(o => o.OrderDate.Date == date.Date).ToList();
-                    var baseVal = mockBaseValues[index % mockBaseValues.Length];
+                    var baseValue = sampleValues[index % sampleValues.Length];
+
                     return new
                     {
                         Date = date.ToString("MMM dd"),
-                        TotalAmount = dayOrders.Any() ? dayOrders.Sum(o => o.TotalAmount) : baseVal + random.Next(-150, 150),
+                        TotalAmount = dayOrders.Any() ? dayOrders.Sum(o => o.TotalAmount) : baseValue + random.Next(-150, 150),
                         Count = dayOrders.Any() ? dayOrders.Count : random.Next(1, 4)
                     };
                 }).ToList();

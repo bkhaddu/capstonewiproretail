@@ -1,95 +1,201 @@
-# Retail Optimization Platform (Order & Inventory Analytics)
+# Retail Optimization Platform
 
-The **Retail Optimization Platform** is a production-grade, data-driven ASP.NET Core platform designed to optimize retail stock management, manage product inventory levels, and handle customer sales orders. 
+ASP.NET Core MVC inventory and order management platform for a retail operations dashboard. The project demonstrates MVC/Razor UI, EF Core and SQL Server data access, REST APIs secured with JWT/cookie authorization, unit testing, Docker, GitHub Actions, and Azure Container Apps deployment.
 
-This solution satisfies all **Great Learning Capstone Evaluation Rubrics** by implementing a clean, layered C# architecture, Entity Framework Code-First data access alongside raw ADO.NET SQL joins, secure JWT role-based Web APIs, robust xUnit unit testing, Docker containerization, Azure deployment pipelines, and conceptual MCP cognitive AI agent summarization.
+## Demo Login
 
----
+The dashboard is admin-only. Unauthenticated users are redirected to `/Account/Login`.
 
-## 🏗️ System Architecture & Layered Design
+Local development credentials:
 
-The codebase implements standard **SOLID Principles** to ensure a high separation of concerns:
+```text
+Email: admin@retail.local
+Password: Admin@12345
+```
 
-1. **Presentation Layer**: ASP.NET Core MVC controllers serving a premium glassmorphic Razor Pages interface with interactive AJAX forms, live Chart.js visualization, and secure REST Web API endpoints.
-2. **Business Logic Layer (Services)**: Transaction-bound service logic coordinating inventory checks, price audits, and multi-item orders.
-3. **Data Access Layer (Repositories)**: Abstraction via the Repository Pattern separating EF Core database operations and direct ADO.NET SQL connections.
-4. **Database Layer**: Normalized 3NF MS SQL Server database containing automatic stock auditing triggers.
+For Azure/production, prefer Container App environment variables instead of hard-coding credentials:
 
----
+```text
+Admin__Email=<admin email>
+Admin__Password=<strong password>
+ConnectionStrings__DefaultConnection=<Azure SQL connection string>
+Jwt__Key=<strong JWT signing key>
+Jwt__Issuer=RetailOptimizationPlatform
+Jwt__Audience=RetailOptimizationUsers
+Jwt__ExpiryMinutes=60
+```
 
-## 🛠️ Technology Stack & Core Focus Areas
+## Architecture
 
-- **Core Framework**: .NET 8.0 / C# 8.0+
-- **Web App UI**: ASP.NET Core MVC, Razor Pages, TagHelpers, Unobtrusive Client/Server Validation, Vanilla JS AJAX.
-- **ORM & Data Access**: Entity Framework Core 8.0 (Code-First Migrations, Linq) & raw **ADO.NET** (SQL connections, command boundaries, and `DbDataReader`).
-- **Database Engine**: MS SQL Server (Tables normalized to 3NF, custom Joins, database Triggers).
-- **Security & Identity**: JWT Bearer Authentication, Role-based Claims Authorization, custom developer token issuer.
-- **Unit Testing**: xUnit, Moq, and isolated EF Core In-Memory databases for TDD rules.
-- **DevOps & Cloud**: Multi-stage Dockerfile, Docker Compose, GitHub Actions CI/CD workflows, Azure Container Apps hosting.
-- **AI Assets**: Cognitive MCP Agent replenishment summarizer, logged Copilot prompt histories.
+```mermaid
+flowchart LR
+    Browser["Admin Browser"] --> MVC["ASP.NET Core MVC Controllers"]
+    Postman["Postman / Swagger"] --> API["JWT-secured REST APIs"]
+    MVC --> Services["OrderService business rules"]
+    API --> Repos["Product Repository"]
+    Services --> EF["EF Core DbContext"]
+    Repos --> EF
+    Repos --> ADO["ADO.NET SQL summary query"]
+    EF --> SQL["SQL Server / Azure SQL"]
+    ADO --> SQL
+    SQL --> Trigger["trg_StockUpdate audit trigger"]
+    GitHub["GitHub Actions"] --> ACR["Azure Container Registry"]
+    ACR --> ACA["Azure Container Apps"]
+    ACA --> SQL
+```
 
----
+## Rubric Mapping
 
-## 📋 Capstone Rubric & Feature Mapping
+| Criteria | Points | Evidence in this repo |
+| --- | ---: | --- |
+| Backend and MVC | 25 | MVC controllers, Razor views, protected Razor Page summary, TagHelpers, admin-only routing, model validation attributes, service/repository layering, custom exceptions. |
+| Database and Data Access | 20 | EF Core migrations, normalized `Products`, `Orders`, `OrderItems`, `AppUsers`, `StockAuditLogs`; repository pattern; ADO.NET sales summary join; SQL trigger migration. |
+| Web API and Security | 15 | REST endpoints under `/api/inventory` and `/api/ai`; JWT bearer support; cookie login for dashboard; role-based `Admin` authorization; anti-forgery on MVC POST forms. |
+| Testing and Code Quality | 10 | xUnit tests for order business rules and product repository behavior; custom exception types; CI test workflow runs the real test project. |
+| Cloud, DevOps and AI | 10 | Dockerfile, docker-compose, GitHub Actions CI, Azure Container Apps deployment workflow, ACR image push, conceptual AI reorder summarizer endpoint, Copilot prompt log. |
+| Analytical Thinking | 10 | Inventory KPIs, low-stock analysis, reorder thresholds, stock-value metrics, order trend chart, stock audit history design. |
+| Documentation and Presentation | 10 | README setup, architecture diagram, rubric mapping, demo checklist, SQL script, Copilot prompt evidence in `docs/copilot_prompts.txt`. |
 
-| Rubric Area | Weight | Implemented Feature & Code Link |
-| :--- | :---: | :--- |
-| **Backend & MVC** | **25%** | Layered C# MVC setup with models ([`Product.cs`](file:///c:/Users/bkhad/Desktop/wipro/RetailOptimizationPlatform/Models/Product.cs), [`Order.cs`](file:///c:/Users/bkhad/Desktop/wipro/RetailOptimizationPlatform/Models/Order.cs)). SOLID transactions ([`OrderService.cs`](file:///c:/Users/bkhad/Desktop/wipro/RetailOptimizationPlatform/Repositories/OrderService.cs)), premium responsive layout ([`_Layout.cshtml`](file:///c:/Users/bkhad/Desktop/wipro/RetailOptimizationPlatform/Views/Shared/_Layout.cshtml)). |
-| **Database & SQL** | **20%** | 3NF normalized SQL schema and `trg_StockUpdate` trigger ([`RetailOptimization.sql`](file:///c:/Users/bkhad/Desktop/wipro/RetailOptimizationPlatform/DatabaseScripts/RetailOptimization.sql)), raw ADO.NET joins reader ([`ProductRepository.GetProductSalesSummaryAsync`](file:///c:/Users/bkhad/Desktop/wipro/RetailOptimizationPlatform/Repositories/ProductRepository.cs#L54)). |
-| **Web API & Security**| **15%** | Secure REST inventory endpoints, developer JWT token generation ([`AuthController.cs`](file:///c:/Users/bkhad/Desktop/wipro/RetailOptimizationPlatform/Controllers/AuthController.cs)), and claims role restrictions ([`InventoryApiController.cs`](file:///c:/Users/bkhad/Desktop/wipro/RetailOptimizationPlatform/Controllers/InventoryApiController.cs)). |
-| **Testing & TDD** | **10%** | Complete TDD/xUnit testing suite covering order constraints and low stock repository filters ([`RetailOptimizationPlatform.Tests`](file:///c:/Users/bkhad/Desktop/wipro/RetailOptimizationPlatform/RetailOptimizationPlatform.Tests/)). **Status: 100% Passing**. |
-| **Cloud & DevOps** | **10%** | Multi-stage [`Dockerfile`](file:///c:/Users/bkhad/Desktop/wipro/RetailOptimizationPlatform/Dockerfile), [`docker-compose.yml`](file:///c:/Users/bkhad/Desktop/wipro/RetailOptimizationPlatform/docker-compose.yml), CI/CD pipelines ([`ci-cd.yml`](file:///c:/Users/bkhad/Desktop/wipro/RetailOptimizationPlatform/.github/workflows/ci-cd.yml), [`deploy-azure-webapp.yml`](file:///c:/Users/bkhad/Desktop/wipro/RetailOptimizationPlatform/.github/workflows/deploy-azure-webapp.yml)). |
-| **AI Integration** | **10%** | AI Replenishment Ticket Summarizer MCP Agent endpoint ([`AiApiController.cs`](file:///c:/Users/bkhad/Desktop/wipro/RetailOptimizationPlatform/Controllers/AiApiController.cs)) and Copilot logs ([`copilot_prompts.txt`](file:///c:/Users/bkhad/Desktop/wipro/RetailOptimizationPlatform/docs/copilot_prompts.txt)). |
-| **Documentation** | **10%** | Full architectural walkthroughs and detailed setup guidelines. |
+## Key Features
 
----
+- Admin login gate before dashboard access.
+- Inventory dashboard with KPI cards, category chart, stock vs reorder chart, product catalog, and an admin-only Razor Page rubric summary.
+- Product create, edit, delete, low-stock listing, and live stock verification.
+- Customer order placement that validates stock, deducts inventory, calculates totals, and records order items in one transaction.
+- EF Core migrations that apply automatically at startup, including the stock audit trigger.
+- REST APIs protected for Admin users through JWT bearer or authenticated admin cookie.
+- Developer-only JWT endpoint for Postman testing in Development.
 
-## ⚡ Setup & Local Execution
+## Local Run
 
-### Prerequisites
-- .NET 8.0 SDK
-- MS SQL Server (LocalDB or Express)
-- Docker Desktop (Optional, for containerized run)
+### Option 1: Visual Studio / dotnet CLI with local SQL container
 
-### 1. Database Initialization
-Execute the SQL script [`DatabaseScripts/RetailOptimization.sql`](file:///c:/Users/bkhad/Desktop/wipro/RetailOptimizationPlatform/DatabaseScripts/RetailOptimization.sql) against your SQL Server. This will create the database, build the 3NF tables, activate the stock-auditing trigger, and seed default product items.
+```powershell
+docker compose up -d sqlserver
+dotnet restore RetailOptimizationPlatform.csproj
+dotnet ef database update
+dotnet run --project RetailOptimizationPlatform.csproj
+```
 
-### 2. Configure Connection String
-Update `appsettings.json` to point to your local database server:
-```json
-"ConnectionStrings": {
-  "DefaultConnection": "Server=(localdb)\\mssqllocaldb;Database=RetailOptimizationDb;Trusted_Connection=True;MultipleActiveResultSets=true"
+Open the displayed local URL and sign in with the admin credentials above.
+
+### Option 2: Full Docker Compose
+
+```powershell
+docker compose up --build
+```
+
+Open:
+
+```text
+http://localhost:8080
+```
+
+## API Testing With Postman
+
+Get a development JWT token:
+
+```http
+POST http://localhost:8080/api/auth/dev-token
+Content-Type: application/json
+
+{
+  "email": "admin@retail.local",
+  "role": "Admin"
 }
 ```
 
-### 3. Run the Application
-Start the project locally using the .NET CLI:
-```powershell
-dotnet run --project RetailOptimizationPlatform.csproj
-```
-Access the dashboard at `http://localhost:5242` or `https://localhost:7198`.
+Postman test script:
 
-### 4. Run via Docker Compose
-Alternatively, launch the fully containerized app and database stack in one command:
-```powershell
-docker-compose up --build
-```
-The web app compiles, runs automatic EF Core database migrations, and exposes base port `8080` (accessible at `http://localhost:8080`).
-
----
-
-## 🧪 Running Unit Tests
-
-The test suite runs standard xUnit tests testing replenishment rules, transaction safety, and stock limits in isolation. Execute the following CLI command:
-```powershell
-dotnet test RetailOptimizationPlatform.Tests/RetailOptimizationPlatform.Tests.csproj
+```javascript
+pm.test("Token received", function () {
+  pm.response.to.have.status(200);
+  const json = pm.response.json();
+  pm.expect(json.token).to.be.a("string").and.not.empty;
+  pm.environment.set("jwt_token", json.token);
+});
 ```
 
----
+Use the token on secured API requests:
 
-## 🤖 Cognitive AI MCP Replenishment Agent
+```text
+Authorization: Bearer {{jwt_token}}
+```
 
-The platform conceptualizes an **AI model endpoint** at `GET /api/ai/summarize-reorder/{productId}`:
-* It analyzes current inventory data (stock level, category, and reorder levels).
-* Computes active operating risk (Critical, Warning, Low).
-* Synthesizes replenishment summaries detailing exact recommended restock quantities based on historic levels.
+Example endpoints:
+
+```http
+GET http://localhost:8080/api/inventory/low-stock
+GET http://localhost:8080/api/inventory/dashboard-data
+GET http://localhost:8080/api/inventory/check/1
+GET http://localhost:8080/api/ai/summarize-reorder/1
+```
+
+## Testing
+
+Run the same test project that CI executes:
+
+```powershell
+dotnet test RetailOptimizationPlatform.Tests\RetailOptimizationPlatform.Tests.csproj --configuration Release --verbosity normal
+```
+
+Current verified result: 6 tests passed.
+
+## GitHub Actions
+
+### CI workflow
+
+`.github/workflows/ci-cd.yml` runs on pushes and pull requests to `main`/`master`:
+
+- Restore application and test projects.
+- Build the ASP.NET Core app.
+- Run `RetailOptimizationPlatform.Tests`.
+- Build and publish a Docker image to GitHub Container Registry on default branch pushes.
+
+### Azure deployment workflow
+
+`.github/workflows/deploy-azure-webapp.yml` runs on pushes to `main` or manual dispatch:
+
+- Logs in to Azure with `AZURE_CREDENTIALS`.
+- Validates required deployment secrets.
+- Logs in to ACR.
+- Builds and pushes the Docker image.
+- Updates the Azure Container App to the new image.
+
+Required GitHub repository secrets:
+
+```text
+AZURE_CREDENTIALS
+ACR_NAME
+AZURE_RESOURCE_GROUP
+AZURE_CONTAINERAPP_NAME
+```
+
+Recommended Azure Container App environment variables:
+
+```text
+ConnectionStrings__DefaultConnection
+Jwt__Key
+Jwt__Issuer
+Jwt__Audience
+Jwt__ExpiryMinutes
+Admin__Email
+Admin__Password
+ASPNETCORE_ENVIRONMENT=Production
+```
+
+## Azure Notes
+
+The app calls `dbContext.Database.Migrate()` on startup, so Azure applies EF migrations when the new container starts. This avoids GitHub-hosted runner firewall issues with Azure SQL. Make sure the Container App can reach Azure SQL and the SQL connection string is set in Container App environment variables.
+
+## Demo Checklist
+
+1. Open the app and confirm it redirects to `/Account/Login`.
+2. Sign in as the admin user.
+3. Show dashboard KPIs and charts.
+4. Add or edit a product.
+5. Place an order and verify stock is deducted.
+6. Call a secured API in Postman with the JWT token.
+7. Show GitHub Actions CI/CD history.
+8. Show Azure Container App, Azure SQL database, and ACR resources in the portal.
+9. Mention `docs/copilot_prompts.txt` as the AI/Copilot process artifact.

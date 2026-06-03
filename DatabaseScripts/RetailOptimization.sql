@@ -1,4 +1,4 @@
-﻿CREATE DATABASE RetailOptimizationDb;
+CREATE DATABASE RetailOptimizationDb;
 GO
 
 USE RetailOptimizationDb;
@@ -12,6 +12,14 @@ CREATE TABLE Products (
     StockQuantity INT NOT NULL,
     ReorderLevel INT NOT NULL,
     CreatedAt DATETIME NOT NULL DEFAULT GETDATE()
+);
+
+CREATE TABLE AppUsers (
+    AppUserId INT PRIMARY KEY IDENTITY(1,1),
+    FullName NVARCHAR(100) NOT NULL,
+    Email NVARCHAR(100) NOT NULL,
+    PasswordHash NVARCHAR(255) NOT NULL,
+    Role NVARCHAR(50) NOT NULL
 );
 
 CREATE TABLE Orders (
@@ -30,41 +38,47 @@ CREATE TABLE OrderItems (
     Quantity INT NOT NULL,
     UnitPrice DECIMAL(18,2) NOT NULL,
 
-    CONSTRAINT FK_OrderItems_Orders 
+    CONSTRAINT FK_OrderItems_Orders
         FOREIGN KEY (OrderId) REFERENCES Orders(OrderId),
 
-    CONSTRAINT FK_OrderItems_Products 
+    CONSTRAINT FK_OrderItems_Products
         FOREIGN KEY (ProductId) REFERENCES Products(ProductId)
 );
+
+CREATE TABLE StockAuditLogs (
+    StockAuditLogId INT PRIMARY KEY IDENTITY(1,1),
+    ProductId INT NOT NULL,
+    OldStock INT NOT NULL,
+    NewStock INT NOT NULL,
+    UpdatedAt DATETIME NOT NULL DEFAULT GETDATE(),
+
+    CONSTRAINT FK_StockAuditLogs_Products
+        FOREIGN KEY (ProductId) REFERENCES Products(ProductId)
+);
+GO
 
 INSERT INTO Products(ProductName, Category, Price, StockQuantity, ReorderLevel)
 VALUES
 ('Laptop', 'Electronics', 55000, 15, 5),
 ('Wireless Mouse', 'Accessories', 799, 50, 10),
-('Keyboard', 'Accessories', 1200, 8, 10);
-
-CREATE TABLE StockAuditLogs (
-    LogId INT PRIMARY KEY IDENTITY(1,1),
-    ProductId INT NOT NULL,
-    OldStock INT NOT NULL,
-    NewStock INT NOT NULL,
-    UpdatedAt DATETIME DEFAULT GETDATE()
-);
+('Smart TV', 'TV', 10000, 19, 5);
 GO
 
-CREATE TRIGGER trg_StockUpdate
+CREATE OR ALTER TRIGGER trg_StockUpdate
 ON Products
 AFTER UPDATE
 AS
 BEGIN
-    INSERT INTO StockAuditLogs(ProductId, OldStock, NewStock)
-    SELECT 
+    SET NOCOUNT ON;
+
+    INSERT INTO StockAuditLogs(ProductId, OldStock, NewStock, UpdatedAt)
+    SELECT
         i.ProductId,
         d.StockQuantity,
-        i.StockQuantity
+        i.StockQuantity,
+        GETDATE()
     FROM inserted i
-    INNER JOIN deleted d 
-        ON i.ProductId = d.ProductId
+    INNER JOIN deleted d ON i.ProductId = d.ProductId
     WHERE i.StockQuantity <> d.StockQuantity;
 END;
 GO

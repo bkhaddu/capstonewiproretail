@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
 using RetailOptimizationPlatform.Repositories;
 using System.Threading.Tasks;
@@ -7,6 +9,9 @@ namespace RetailOptimizationPlatform.Controllers
 {
     [Route("api/ai")]
     [ApiController]
+    [Authorize(
+        AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + "," + CookieAuthenticationDefaults.AuthenticationScheme,
+        Roles = "Admin")]
     public class AiApiController : ControllerBase
     {
         private readonly IProductRepository _productRepository;

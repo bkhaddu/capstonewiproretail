@@ -1,4 +1,6 @@
-﻿namespace RetailOptimizationPlatform.Models
+using System.ComponentModel.DataAnnotations;
+
+namespace RetailOptimizationPlatform.Models
 {
     public class OrderItem
     {
@@ -10,8 +12,10 @@
         public int ProductId { get; set; }
         public Product? Product { get; set; }
 
+        [Range(1, 100000)]
         public int Quantity { get; set; }
 
+        [Range(0, 100000)]
         public decimal UnitPrice { get; set; }
     }
 }

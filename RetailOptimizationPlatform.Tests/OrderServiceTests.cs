@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
-using Moq;
 using RetailOptimizationPlatform.Data;
+using RetailOptimizationPlatform.Exceptions;
 using RetailOptimizationPlatform.Models;
 using RetailOptimizationPlatform.Services;
 using Xunit;
@@ -86,7 +86,7 @@ namespace RetailOptimizationPlatform.Tests
             };
 
             // Act & Assert
-            var exception = await Assert.ThrowsAsync<Exception>(() => orderService.PlaceOrderAsync(order));
+            var exception = await Assert.ThrowsAsync<OrderProcessingException>(() => orderService.PlaceOrderAsync(order));
             Assert.Equal("Order must contain at least one item.", exception.Message);
         }
 
@@ -113,7 +113,7 @@ namespace RetailOptimizationPlatform.Tests
             };
 
             // Act & Assert
-            var exception = await Assert.ThrowsAsync<Exception>(() => orderService.PlaceOrderAsync(order));
+            var exception = await Assert.ThrowsAsync<ProductNotFoundException>(() => orderService.PlaceOrderAsync(order));
             Assert.Equal("Product not found.", exception.Message);
         }
 
@@ -153,7 +153,7 @@ namespace RetailOptimizationPlatform.Tests
             };
 
             // Act & Assert
-            var exception = await Assert.ThrowsAsync<Exception>(() => orderService.PlaceOrderAsync(order));
+            var exception = await Assert.ThrowsAsync<InsufficientStockException>(() => orderService.PlaceOrderAsync(order));
             Assert.Contains("Insufficient stock for Gaming Keyboard", exception.Message);
         }
     }

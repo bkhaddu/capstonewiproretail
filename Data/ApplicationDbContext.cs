@@ -14,6 +14,7 @@ namespace RetailOptimizationPlatform.Data
         public DbSet<Order> Orders => Set<Order>();
         public DbSet<OrderItem> OrderItems => Set<OrderItem>();
         public DbSet<AppUser> AppUsers => Set<AppUser>();
+        public DbSet<StockAuditLog> StockAuditLogs => Set<StockAuditLog>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -31,7 +32,19 @@ namespace RetailOptimizationPlatform.Data
                 .Property(oi => oi.UnitPrice)
                 .HasColumnType("decimal(18,2)");
             modelBuilder.Entity<Product>()
-    .ToTable(tb => tb.HasTrigger("trg_StockUpdate"));
+                .ToTable(tb => tb.HasTrigger("trg_StockUpdate"));
+
+            modelBuilder.Entity<StockAuditLog>()
+                .Property(log => log.UpdatedAt)
+                .HasDefaultValueSql("GETDATE()");
+
+            modelBuilder.Entity<StockAuditLog>()
+                .HasOne(log => log.Product)
+                .WithMany()
+                .HasForeignKey(log => log.ProductId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            var seedCreatedAt = new DateTime(2026, 6, 1, 0, 0, 0, DateTimeKind.Utc);
 
             modelBuilder.Entity<Product>().HasData(
                 new Product
@@ -41,7 +54,8 @@ namespace RetailOptimizationPlatform.Data
                     Category = "Electronics",
                     Price = 55000,
                     StockQuantity = 15,
-                    ReorderLevel = 5
+                    ReorderLevel = 5,
+                    CreatedAt = seedCreatedAt
                 },
                 new Product
                 {
@@ -50,7 +64,8 @@ namespace RetailOptimizationPlatform.Data
                     Category = "Accessories",
                     Price = 799,
                     StockQuantity = 50,
-                    ReorderLevel = 10
+                    ReorderLevel = 10,
+                    CreatedAt = seedCreatedAt
                 },
                 new Product
                 {
@@ -59,7 +74,8 @@ namespace RetailOptimizationPlatform.Data
                     Category = "TV",
                     Price = 10000,
                     StockQuantity = 19,
-                    ReorderLevel = 5
+                    ReorderLevel = 5,
+                    CreatedAt = seedCreatedAt
                 }
             );
         }

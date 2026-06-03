@@ -1,9 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using RetailOptimizationPlatform.Models;
 using RetailOptimizationPlatform.Repositories;
 
 namespace RetailOptimizationPlatform.Controllers
 {
+    [Authorize(Roles = "Admin")]
     public class ProductsController : Controller
     {
         private readonly IProductRepository _productRepository;
@@ -25,6 +27,7 @@ namespace RetailOptimizationPlatform.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Product product)
         {
             if (!ModelState.IsValid)
@@ -49,6 +52,7 @@ namespace RetailOptimizationPlatform.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(Product product)
         {
             if (!ModelState.IsValid)
@@ -60,6 +64,8 @@ namespace RetailOptimizationPlatform.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int id)
         {
             await _productRepository.DeleteAsync(id);

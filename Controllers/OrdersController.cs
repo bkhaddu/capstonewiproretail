@@ -1,11 +1,15 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RetailOptimizationPlatform.Data;
+using RetailOptimizationPlatform.Exceptions;
 using RetailOptimizationPlatform.Models;
 using RetailOptimizationPlatform.Services;
+using RetailOptimizationPlatform.ViewModels;
 
 namespace RetailOptimizationPlatform.Controllers
 {
+    [Authorize(Roles = "Admin")]
     public class OrdersController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -19,23 +23,30 @@ namespace RetailOptimizationPlatform.Controllers
 
         public async Task<IActionResult> Create()
         {
-            ViewBag.Products = await _context.Products.ToListAsync();
-            return View();
+            await PopulateProductsAsync();
+            return View(new OrderCreateViewModel());
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create(int productId, int quantity, string customerName, string customerEmail)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create(OrderCreateViewModel model)
         {
+            if (!ModelState.IsValid)
+            {
+                await PopulateProductsAsync();
+                return View(model);
+            }
+
             var order = new Order
             {
-                CustomerName = customerName,
-                CustomerEmail = customerEmail,
+                CustomerName = model.CustomerName,
+                CustomerEmail = model.CustomerEmail,
                 OrderItems = new List<OrderItem>
                 {
                     new OrderItem
                     {
-                        ProductId = productId,
-                        Quantity = quantity
+                        ProductId = model.ProductId,
+                        Quantity = model.Quantity
                     }
                 }
             };
@@ -45,11 +56,11 @@ namespace RetailOptimizationPlatform.Controllers
                 await _orderService.PlaceOrderAsync(order);
                 return RedirectToAction("Success");
             }
-            catch (Exception ex)
+            catch (OrderProcessingException ex)
             {
-                ViewBag.Error = ex.Message;
-                ViewBag.Products = await _context.Products.ToListAsync();
-                return View();
+                ModelState.AddModelError(string.Empty, ex.Message);
+                await PopulateProductsAsync();
+                return View(model);
             }
         }
 
@@ -66,6 +77,11 @@ namespace RetailOptimizationPlatform.Controllers
                 .ToListAsync();
 
             return View(orders);
+        }
+
+        private async Task PopulateProductsAsync()
+        {
+            ViewBag.Products = await _context.Products.ToListAsync();
         }
     }
 }

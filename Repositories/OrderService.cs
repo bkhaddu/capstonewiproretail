@@ -1,5 +1,7 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using RetailOptimizationPlatform.Data;
+using RetailOptimizationPlatform.Exceptions;
 using RetailOptimizationPlatform.Models;
 
 namespace RetailOptimizationPlatform.Services
@@ -17,39 +19,70 @@ namespace RetailOptimizationPlatform.Services
         {
             if (order.OrderItems == null || !order.OrderItems.Any())
             {
-                throw new Exception("Order must contain at least one item.");
+                throw new OrderProcessingException("Order must contain at least one item.");
             }
 
-            decimal totalAmount = 0;
+            IDbContextTransaction? transaction = null;
 
-            foreach (var item in order.OrderItems)
+            if (_context.Database.IsRelational())
             {
-                var product = await _context.Products
-                    .FirstOrDefaultAsync(p => p.ProductId == item.ProductId);
-
-                if (product == null)
-                {
-                    throw new Exception("Product not found.");
-                }
-
-                if (product.StockQuantity < item.Quantity)
-                {
-                    throw new Exception($"Insufficient stock for {product.ProductName}");
-                }
-
-                product.StockQuantity -= item.Quantity;
-                item.UnitPrice = product.Price;
-                totalAmount += item.Quantity * product.Price;
+                transaction = await _context.Database.BeginTransactionAsync();
             }
 
-            order.TotalAmount = totalAmount;
-            order.OrderDate = DateTime.Now;
-            order.Status = "Placed";
+            try
+            {
+                decimal totalAmount = 0;
 
-            _context.Orders.Add(order);
-            await _context.SaveChangesAsync();
+                foreach (var item in order.OrderItems)
+                {
+                    var product = await _context.Products
+                        .FirstOrDefaultAsync(p => p.ProductId == item.ProductId);
 
-            return order;
+                    if (product == null)
+                    {
+                        throw new ProductNotFoundException();
+                    }
+
+                    if (product.StockQuantity < item.Quantity)
+                    {
+                        throw new InsufficientStockException(product.ProductName);
+                    }
+
+                    product.StockQuantity -= item.Quantity;
+                    item.UnitPrice = product.Price;
+                    totalAmount += item.Quantity * product.Price;
+                }
+
+                order.TotalAmount = totalAmount;
+                order.OrderDate = DateTime.Now;
+                order.Status = "Placed";
+
+                _context.Orders.Add(order);
+                await _context.SaveChangesAsync();
+
+                if (transaction != null)
+                {
+                    await transaction.CommitAsync();
+                }
+
+                return order;
+            }
+            catch
+            {
+                if (transaction != null)
+                {
+                    await transaction.RollbackAsync();
+                }
+
+                throw;
+            }
+            finally
+            {
+                if (transaction != null)
+                {
+                    await transaction.DisposeAsync();
+                }
+            }
         }
     }
 }

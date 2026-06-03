@@ -29,8 +29,14 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
+      - name: Validate required deployment secrets
+        run: |
+          test -n "$ACR_NAME" || (echo "Missing repository secret: ACR_NAME" && exit 1)
+          test -n "$RESOURCE_GROUP" || (echo "Missing repository secret: AZURE_RESOURCE_GROUP" && exit 1)
+          test -n "$CONTAINER_APP_NAME" || (echo "Missing repository secret: AZURE_CONTAINERAPP_NAME" && exit 1)
+
       - name: ACR Login
-        run: az acr login --name $ACR_NAME
+        run: az acr login --name "$ACR_NAME"
 
       # Redundant and fail-prone steps commented out:
       # EF database migrations are automatically executed by the container at startup in Program.cs.
@@ -70,17 +76,19 @@ jobs:
 
       - name: Build and Push Docker image
         run: |
+          set -euo pipefail
           IMAGE_TAG=${{ github.sha }}
           IMAGE_URI=${ACR_NAME}.azurecr.io/${IMAGE_NAME}:${IMAGE_TAG}
           IMAGE_LATEST=${ACR_NAME}.azurecr.io/${IMAGE_NAME}:latest
-          docker build -t $IMAGE_URI .
-          docker tag $IMAGE_URI $IMAGE_LATEST
-          docker push $IMAGE_URI
-          docker push $IMAGE_LATEST
+          docker build -t "$IMAGE_URI" .
+          docker tag "$IMAGE_URI" "$IMAGE_LATEST"
+          docker push "$IMAGE_URI"
+          docker push "$IMAGE_LATEST"
           echo "IMAGE_URI=$IMAGE_URI" >> $GITHUB_ENV
 
       - name: Deploy image to Azure Container App
         run: |
+          set -euo pipefail
           az containerapp update \
             --name "$CONTAINER_APP_NAME" \
             --resource-group "$RESOURCE_GROUP" \

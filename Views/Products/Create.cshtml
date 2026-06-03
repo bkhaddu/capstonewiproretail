@@ -13,6 +13,7 @@
     </div>
 
     <form asp-action="Create" method="post">
+        @Html.AntiForgeryToken()
         <div class="form-premium-group">
             <label class="form-premium-label">Product Name</label>
             <input asp-for="ProductName" class="form-premium-control" placeholder="e.g. Mechanical Keyboard" required />

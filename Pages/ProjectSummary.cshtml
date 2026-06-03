@@ -1,0 +1,41 @@
+@page
+@model RetailOptimizationPlatform.Pages.ProjectSummaryModel
+@{
+    ViewData["Title"] = "Project Summary";
+}
+
+<div class="premium-table-card reveal">
+    <div class="table-title-row">
+        <div>
+            <h3 class="chart-title" style="font-size: 1.25rem;">Capstone Rubric Coverage</h3>
+            <p class="text-muted m-0" style="font-size: 0.82rem;">
+                Admin-only Razor Page summarizing how the platform maps to the grading criteria.
+            </p>
+        </div>
+        <a asp-controller="Products" asp-action="Index" class="btn-premium btn-premium-secondary btn-premium-sm">
+            Back to Dashboard
+        </a>
+    </div>
+
+    <div class="table-responsive">
+        <table class="premium-table">
+            <thead>
+                <tr>
+                    <th>Criteria</th>
+                    <th>Points</th>
+                    <th>Evidence</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.RubricItems)
+                {
+                    <tr>
+                        <td class="fw-semibold text-dark">@item.Criteria</td>
+                        <td>@item.Points</td>
+                        <td>@item.Evidence</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

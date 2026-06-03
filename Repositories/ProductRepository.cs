@@ -3,7 +3,6 @@ using RetailOptimizationPlatform.Data;
 using RetailOptimizationPlatform.DTOs;
 using RetailOptimizationPlatform.Models;
 using System.Data;
-using System.Data.Common;
 
 namespace RetailOptimizationPlatform.Repositories
 {
@@ -60,19 +59,21 @@ namespace RetailOptimizationPlatform.Repositories
         {
             var summaries = new List<ProductSalesSummary>();
             var connection = _context.Database.GetDbConnection();
+            var shouldCloseConnection = connection.State == ConnectionState.Closed;
 
-            if (connection.State == ConnectionState.Closed)
+            try
             {
-                await connection.OpenAsync();
-            }
+                if (shouldCloseConnection)
+                {
+                    await connection.OpenAsync();
+                }
 
-            using (var command = connection.CreateCommand())
-            {
+                using var command = connection.CreateCommand();
                 command.CommandText = @"
-                    SELECT 
-                        p.ProductId, 
-                        p.ProductName, 
-                        ISNULL(SUM(oi.Quantity), 0) AS TotalQuantitySold, 
+                    SELECT
+                        p.ProductId,
+                        p.ProductName,
+                        ISNULL(SUM(oi.Quantity), 0) AS TotalQuantitySold,
                         ISNULL(SUM(oi.Quantity * oi.UnitPrice), 0) AS TotalRevenue
                     FROM Products p
                     LEFT JOIN OrderItems oi ON p.ProductId = oi.ProductId
@@ -80,18 +81,23 @@ namespace RetailOptimizationPlatform.Repositories
 
                 command.CommandType = CommandType.Text;
 
-                using (var reader = await command.ExecuteReaderAsync())
+                using var reader = await command.ExecuteReaderAsync();
+                while (await reader.ReadAsync())
                 {
-                    while (await reader.ReadAsync())
+                    summaries.Add(new ProductSalesSummary
                     {
-                        summaries.Add(new ProductSalesSummary
-                        {
-                            ProductId = reader.GetInt32(0),
-                            ProductName = reader.GetString(1),
-                            TotalQuantitySold = reader.GetInt32(2),
-                            TotalRevenue = reader.GetDecimal(3)
-                        });
-                    }
+                        ProductId = reader.GetInt32(0),
+                        ProductName = reader.GetString(1),
+                        TotalQuantitySold = reader.GetInt32(2),
+                        TotalRevenue = reader.GetDecimal(3)
+                    });
+                }
+            }
+            finally
+            {
+                if (shouldCloseConnection && connection.State != ConnectionState.Closed)
+                {
+                    await connection.CloseAsync();
                 }
             }
 

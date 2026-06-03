@@ -13,6 +13,7 @@
     </div>
 
     <form asp-action="Edit" method="post">
+        @Html.AntiForgeryToken()
         <input type="hidden" asp-for="ProductId" />
 
         <div class="form-premium-group">

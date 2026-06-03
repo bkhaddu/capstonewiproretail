@@ -11,6 +11,7 @@ namespace RetailOptimizationPlatform.Models
         public string ProductName { get; set; } = string.Empty;
 
         [Required]
+        [StringLength(100)]
         public string Category { get; set; } = string.Empty;
 
         [Range(1, 100000)]
